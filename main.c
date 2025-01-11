@@ -69,6 +69,38 @@ int compareLastModified(void* a, void* b) {
     return CompareFileTime(&indexerB->lastModified, &indexerA->lastModified);
 }
 
+Command* parseInput(char* input) {
+    // Tokenize the input
+    char* token = strtok(input, " ");
+    
+    // Check if the first token is a number or character
+    if (token == NULL) {
+        return NULL;
+    }
+
+    Command* command = (Command*)malloc(sizeof(Command));
+    command->index = atoi(token);
+
+    LinkedList* args = createList(free);
+
+    while (token != NULL) {
+        token = strtok(NULL, " ");
+        if (token != NULL) {
+            char* arg = strdup(token);
+            push(args, arg);
+        }
+    }
+
+    command->args = args;
+
+    return command;
+}
+
+void printChar(void* data, int index) {
+    printf("%d: %s\n", index, (char*)data);
+    return;
+}
+
 int main() {
     char* root = "C:\\Users\\silas\\code\\*";
 
@@ -88,28 +120,52 @@ int main() {
     printList(subdirs, printData);
 
     // Take input and open the project
-    int index;
-    scanf("%d", &index);
+    char* command = (char*)malloc(100);
+    fgets(command, 100, stdin);
 
-    INDEXER* indexer = (INDEXER*)getValue(subdirs, index);
+    Command* parsed = parseInput(command);
 
-    if (indexer == NULL) {
-        printf("Invalid index.\n");
-        return 1;
-    }
+    INDEXER* indexer = (INDEXER*)getValue(subdirs, parsed->index);
 
     printf("Opening project: %s\n", indexer->name);
 
-    // combine the path with the project name
-    char* command = (char*)malloc(strlen("code ") + strlen(indexer->path) + 1);
-    strcpy(command, "code ");
-    strcat(command, indexer->path);
+    if (parsed->args->size == 0) {
+        char* command = (char*)malloc(strlen(indexer->path) + 1);
+        strcpy(command, "code ");
+        strcat(command, indexer->path);
+        system(command);
+    }
 
-    // Open the project
-    system(command);
+    while (parsed->args->size > 0) {
+        char* arg = (char*)pop(parsed->args);
 
-    // Free the list
+        char* command = (char*)malloc(strlen(indexer->path) + strlen(arg) + 1);
+
+        strcpy(command, arg);
+        
+        if (command[strlen(command) - 1] == '\n') {
+            command[strlen(command) - 1] = ' ';
+        } else {
+            strcat(command, " ");
+        }
+
+        if (strcmp(command, "cmd ") == 0) {
+            char* command = (char*)malloc(strlen(indexer->path) + 100);
+            strcpy(command, "cmd.exe /c start \"\" cmd.exe /K \"cd /d ");
+            strcat(command, indexer->path);
+            strcat(command, "\"");
+
+            system(command);
+            continue;
+        }
+
+        strcat(command, indexer->path);
+        system(command);
+    }
+
     freeList(subdirs);
+    freeList(parsed->args);
+    free(parsed);
 
     return 0;
 }
