@@ -16,6 +16,5 @@ typedef struct INDEXER {
 LinkedList* get_subdirs(char* root);
 void printData(void* data, int index);
 int compareLastModified(void* a, void* b);
-void sortLinkedList(LinkedList* list, int (*compare)(void*, void*));
 
 #endif
