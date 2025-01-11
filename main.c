@@ -96,11 +96,6 @@ Command* parseInput(char* input) {
     return command;
 }
 
-void printChar(void* data, int index) {
-    printf("%d: %s\n", index, (char*)data);
-    return;
-}
-
 int main() {
     char* root = "C:\\Users\\silas\\code\\*";
 
